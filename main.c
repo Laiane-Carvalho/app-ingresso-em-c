@@ -196,7 +196,8 @@ int verificarSeExistePoltrona(char *poltrona) {
 }
 
 char *selecionarPoltroa() {
-    char poltrona[3];
+    char *poltrona;
+    poltrona = malloc(sizeof(char) * 100);
     do {
         printf("C - Cancelar\n");
         printf("Digite a poltrona: ");
@@ -220,8 +221,10 @@ char *selecionarPoltroa() {
 }
 
 void adicionarNovaPoltrona(char *poltrona){
-    int posicao = 0;
-    while (strcmp(poltronasSelecionadas[posicao++], "") != 0);
+    int posicao = 70;
+    while (strcmp(poltronasSelecionadas[posicao], "") != 0){
+        posicao++;
+    }
     strcpy(poltronasSelecionadas[posicao], poltrona);
     printf("");
 }
