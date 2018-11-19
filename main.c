@@ -1,7 +1,16 @@
 #include <stdio.h>
+
+#ifdef _WIN32
+
+#include <malloc.h>
+
+#else
+#include <stdlib.h>
+#endif
+
 #include <malloc.h>
 #include <sys/types.h>
-#include <mem.h>
+#include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
 
