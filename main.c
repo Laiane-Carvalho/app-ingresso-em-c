@@ -1,191 +1,133 @@
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include <malloc.h>
+#include <sys/types.h>
+#include <mem.h>
 #include <ctype.h>
+#include <stdbool.h>
 
-#include "config.c"
+#include "vars.c"
+#include "cliente.h"
 #include "main.h"
-#include "client.h"
 
+char *fgetsInput;
+int TAMANHO_DA_LISTA_ESPETACULOS = 0;
+int QUANTIDADE_VENDAS = 0;
 char poltronasDisponiveis[] = "ABCDE";
-char poltronasSelecionadas[100][3];
-Espetaculo *espetaculos;
-int moduloSelecionado;
+Espetaculo espetaculosDisponiveis[10];
+Compra ingressosVendidos[100];
 
+/*header*/
 void cadastrarEspetaculos();
 
 void opcaoUsuario() {
+    printf("############################################\n");
+    printf("#            Tela Principal                #\n");
+    printf("############################################\n");
     printf("### 1 - Cliente\n");
     printf("### 2 - Administrador\n");
     printf("### 3 - Fechar Programa\n");
 }
 
-int main() {
-
-    poltronasSelecionadas[0][0] = 'A';
-    poltronasSelecionadas[0][1] = '1';
-
+void iniciarlizarVarivareis() {
     printf("Iniciando programa...\n");
     cadastrarEspetaculos();
-    printf("\n\n");
 
-    while (moduloSelecionado != 3) {
+    /*teste*/
+    Espetaculo espetaculo = {100, "Espetaculo das Bandeiras", 70.00F, "18:00"};
+    adicionarVenda(&espetaculo, "A1", 70.00F, 32);
+    printf("\n\n");
+}
+
+void adicionarVenda(Espetaculo *espetaculo, char *poltrona, float valorPago, int idadeComprador) {
+    char dataHora[22];
+    sprintf(dataHora, "%s %s", __DATE__, __TIME__);
+    Compra compra = {espetaculo, poltrona, valorPago, dataHora, idadeComprador};
+    ingressosVendidos[QUANTIDADE_VENDAS++] = compra;
+}
+
+void adicionarEspetaculo(int codigo, char *nome, float valor, char *horario) {
+    Espetaculo espetaculo = {codigo, nome, valor, horario};
+    espetaculosDisponiveis[TAMANHO_DA_LISTA_ESPETACULOS++] = espetaculo;
+}
+
+void cadastrarEspetaculos() {
+    printf("  * Cadastrando dados...");
+    adicionarEspetaculo(100, "Espetaculo das Bandeiras", 70.00f, "18:00");
+    adicionarEspetaculo(102, "Sisne Negro", 138.00f, "15:00");
+    adicionarEspetaculo(103, "Vento Levou", 25.50f, "22:00");
+    adicionarEspetaculo(104, "Garota de Ipanema", 55.99f, "21:00");
+    adicionarEspetaculo(105, "Fluido Urbano", 110.00f, "12:00");
+    printf("OK\n");
+}
+
+int main() {
+    iniciarlizarVarivareis();
+    fgetsInput = malloc(3);
+    unsigned int opcao;
+    while (opcao != 3) {
         opcaoUsuario();
         printf("Escolha modulo: ");
-        scanf("%d", &moduloSelecionado);
-        fpurge(stdin);
+        fflush(stdin);
+        fgets(fgetsInput, 3, stdin);
+        opcao = atoi(fgetsInput);
         printf("\n");
-        switch (moduloSelecionado) {
+        switch (opcao) {
             case 1: {
-                inicializarCliente();
-                break;
-            }
-            case 2: {
+                iniciarTelaDoCliente();
                 break;
             }
             case 3: {
-                printf("Encerrando Aplicacao.....OK\n");
+                printf("Encerrando aplicacao...\n\n");
                 break;
             }
-            default: {
-                printf("Opcao invalida!\n\n");
-            }
+            default:
+                printf("Opcao invalida!\n");
         }
     }
     return 0;
 }
 
-static Espetaculo createEspetaculo(int codigo, char *nome, float valor) {
-    Espetaculo espetaculo;
-    espetaculo.codigo = codigo;
-    strcpy(espetaculo.nome, nome);
-    espetaculo.valor = valor;
-    return espetaculo;
-}
-
-void cadastrarEspetaculos() {
-    printf("  * Cadastrando dados...");
-    espetaculos = (Espetaculo *) malloc(sizeof(Espetaculo) * 100);
-    Espetaculo es0 = createEspetaculo(100, "Espetaculo das Bandeiras", 70.00f);
-    espetaculos[0] = es0;
-
-    Espetaculo es1 = createEspetaculo(102, "Sisne Negro", 138.00f);
-    espetaculos[1] = es1;
-
-    Espetaculo es2 = createEspetaculo(103, "Vento Levou", 25.50f);
-    espetaculos[2] = es2;
-
-    Espetaculo es3 = createEspetaculo(104, "Garota de Ipanema", 55.99f);
-    espetaculos[3] = es3;
-
-    Espetaculo es4 = createEspetaculo(105, "Fluido Urbano", 110.00f);
-    espetaculos[4] = es4;
-    printf("OK\n");
-}
-
-int quantidadeDeEspetaculo() {
-    int quantidadeEspetaculo = 0;
-    while (strcmp(espetaculos[quantidadeEspetaculo].nome, "") != 0) {
-        quantidadeEspetaculo++;
-    }
-    return quantidadeEspetaculo;
-}
-
 void mostrarEspetaculosCadastrados() {
-    int quantidadeEspetaculo = quantidadeDeEspetaculo();
     printf("\n- - - - - - - Espetaculos Disponiveis - - - - - - -\n");
     printf("#####################################################\n");
     printf("# C - Cancelar                                      #\n");
     printf("#####################################################\n");
-
-    for (int i = 0; i < quantidadeEspetaculo; i++) {
-        Espetaculo esp = espetaculos[i];
+    for (int i = 0; i < TAMANHO_DA_LISTA_ESPETACULOS; i++) {
+        Espetaculo esp = espetaculosDisponiveis[i];
         printf("%d", esp.codigo);
         printf(" - ");
         printf("%s - ", esp.nome);
+        printf("%s - ", esp.horario);
         printf("R$ %3.2f", esp.valor);
         printf("\n");
     }
 }
 
-Espetaculo *encontrarEspetaculoPorCodigo(int codigo) {
-    int quantidadeEspetaculo = quantidadeDeEspetaculo();
-    for (int i = 0; i < quantidadeEspetaculo; i++) {
-        if (espetaculos[i].codigo == codigo) {
-            return &espetaculos[i];
-        }
-    }
-    return NULL;
-}
-
-Espetaculo *selecionarEspetaculo() {
-    printf("Digite o codigo do espetaculo: ");
-    char caracteresDigitado;
-    scanf("%s", &caracteresDigitado);
-
-    int codigo = atoi(&caracteresDigitado);
-    fpurge(stdin);
-
-    Espetaculo *esp = encontrarEspetaculoPorCodigo(codigo);
-    if (esp != NULL) {
-        printf("Confirma \"%s\" para ver?\n[ S = Sim\n| N = Nao\n[ C = Cancelar: ", &esp->nome);
-        char confirm;
-        fgets(&confirm, sizeof(char) + 1, stdin);
-        if (confirm == 's' || confirm == 'S') {
-            return encontrarEspetaculoPorCodigo(codigo);
-        } else {
-            if (confirm == 'n' || confirm == 'N') {
-                return NULL;
-            } else {
-                if (confirm == 'c' || confirm == 'C') {
-                    return -1;
-                }
-            }
-        }
-    } else {
-        if (caracteresDigitado == 'c' || caracteresDigitado == 'C') {
-            return -1;
-        }
-        printf("\n### ==> Codigo %d invalido <== ###\n", codigo);
-        return NULL;
-    }
-}
-
 int verificarSePoltronaEstaDisponivel(char *poltrona) {
     for (int i = 0; i < 100; i++) {
-        if (strcmp(poltronasSelecionadas[i], poltrona) == 0) {
+        poltrona[0] = toupper(poltrona[0]);
+        Compra cp = ingressosVendidos[i];
+        if (cp.poltrona == NULL) {
+            continue;
+        }
+        if (strcmp(cp.poltrona, poltrona) == 0) {
             return false;
         }
     }
     return true;
 }
 
-void mostrarPoltronasDisponiveis() {
-    int tamanhoArrayPoltrona = strlen(poltronasDisponiveis);
-    for (int i = 0; i < tamanhoArrayPoltrona; i++) {
-        printf("\n");
-        for (int y = 0; y < 10; y++) {
-            //if (!verificarSePoltronaEstaDisponivel(poltronasDisponiveis[i])) {
-            printf("[%c%d] ", poltronasDisponiveis[i], y + 1);
-//            }else{
-//                printf(" [*] ");
-//            }
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
 int verificarSeExistePoltrona(char *poltrona) {
     char *poltronaCopy;
-    poltronaCopy = malloc(sizeof(char) * 2);
+    poltronaCopy = malloc(sizeof(char) * 3);
     strcpy(poltronaCopy, poltrona);
+    poltronaCopy[0] = toupper(poltronaCopy[0]);
     int tamanhoArrayPoltrona = strlen(poltronasDisponiveis);
     for (int i = 0; i < tamanhoArrayPoltrona; i++) {
         if (toupper(poltronasDisponiveis[i]) == toupper(poltronaCopy[0])) {
             poltronaCopy[0] = '0';
-            if (atoi(poltronaCopy) <= 10) {
+            int _v = atoi(poltronaCopy);
+            if (_v >= 1 && _v <= 10) {
                 return true;
             } else {
                 return false;
@@ -195,225 +137,34 @@ int verificarSeExistePoltrona(char *poltrona) {
     return false;
 }
 
-char *selecionarPoltroa() {
-    char poltrona[3];
-    do {
-        printf("C - Cancelar\n");
-        printf("Digite a poltrona: ");
-        scanf("%s", &poltrona);
-        fpurge(stdin);
-        if (strcmp(poltrona, "c") == 0 || strcmp(poltrona, "c") == 0) {
-            return NULL;
-        }
+void mostrarPoltronasDisponiveis() {
+    int quantidadePoltronas = strlen(poltronasDisponiveis);
+    for (int i = 0; i < quantidadePoltronas; i++) {
         printf("\n");
-        poltrona[0] = toupper(poltrona[0]);
-        if (verificarSeExistePoltrona(poltrona)) {
+        for (int y = 0; y < 10; y++) {
+            char poltrona[4];
+            sprintf(poltrona, "%c%d", toupper(poltronasDisponiveis[i]), y + 1);
             if (verificarSePoltronaEstaDisponivel(poltrona)) {
-                return poltrona;
+                printf("[%c%d] ", poltronasDisponiveis[i], y + 1);
             } else {
-                printf("Poltrona nao esta disponivel!\n");
+                printf(" [*] ");
             }
-        } else {
-            printf("Poltrona \"%s\" invalida!\n", poltrona);
         }
-    } while (true);
-}
-
-void adicionarNovaPoltrona(char *poltrona){
-    int posicao = 0;
-    while (strcmp(poltronasSelecionadas[posicao++], "") != 0);
-    strcpy(poltronasSelecionadas[posicao], poltrona);
-    printf("");
-}
-
-
-
-
-
-
-
-
-
-/*
-
-
-int main3() {
-
-
-
-
-
-
-
-    return 0;
-}
-
-int main2() {
-
-
-    Espetaculo *esp = NULL;
-    do {
-        mostrarEspetaculosCadastrados();
-        esp = selecionarEspetaculo();
-    } while (esp == NULL);
-    return 0;
-}
-
-int quantidadeDeEspetaculo() {
-    int quantidadeEspetaculo = 0;
-    while (strcmp(espetaculos[quantidadeEspetaculo].nome, "") != 0) {
-        quantidadeEspetaculo++;
-    }
-    return quantidadeEspetaculo;
-}
-
-void mostrarEspetaculosCadastrados() {
-    int quantidadeEspetaculo = quantidadeDeEspetaculo();
-    printf("\n- - - - - - - Espetaculos Disponiveis - - - - - - -\n");
-    for (int i = 0; i < quantidadeEspetaculo; i++) {
-        Espetaculo esp = espetaculos[i];
-        printf("%d", esp.codigo);
-        printf(" - ");
-        printf("%s - ", esp.nome);
-        printf("R$ %3.2f", esp.valor);
         printf("\n");
     }
+    printf("\n");
 }
 
+Espetaculo *encontrarEspetaculoPorCodigo(int codigo) {
+    for (int i = 0; i < TAMANHO_DA_LISTA_ESPETACULOS; i++) {
+        if (espetaculosDisponiveis[i].codigo == codigo) {
+            return &espetaculosDisponiveis[i];
+        }
+    }
+    return NULL;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-//char poltronasDisponiveis[] = "ABCDEFGHIJ";
-//char poltronasSelecionadas[100][5];
-//
-//int main() {
-//    mostrarPoltronasESelecionar();
-//    selecionarUmaPoltronaDisponivel();
-//    return 0;
-//}
-//
-//void flush_in() {
-//    int ch;
-//    while ((ch = fgetc(stdin)) != EOF && ch != '\n') {}
-//}
-//
-//void perguntarPoltrola(char *poltrona){
-//    printf("Digite o nome da poltrona: ");
-//    scanf("%s", poltrona);
-//    flush_in();
-//    printf("\n");
-//}
-//
-//void selecionarUmaPoltronaDisponivel() {
-//    char *poltrona, confirmacao;
-//    poltrona = malloc(2);
-//
-//    while (confirmacao != 's') {
-////        if (confirmacao != '\0') {
-//            perguntarPoltrola(poltrona);
-//
-//            printf("\nConfirma a poltrona %s? ", poltrona);
-//            printf("\nS = Sim");
-//            printf("\nN = Nao");
-//            printf("\nC = Cancelar");
-//            scanf("%c", &confirmacao);
-//            flush_in();
-//            if (confirmacao == 'S' || confirmacao == 's') {
-//                strcpy(poltronasSelecionadas[0], poltrona);
-//            }
-//            if (confirmacao == 'n' || confirmacao == 'N') {
-//                mostrarPoltronasESelecionar();
-//            }
-////        }
-//    }
-//    printf("fim...");
-//}
-//
-//void mostrarPoltronasESelecionar() {
-//    clearScreen();
-//
-//    int tamanhoArrayPoltrona = strlen(poltronasDisponiveis);
-//    for (int i = 0; i < tamanhoArrayPoltrona; i++) {
-//        printf("\n");
-//        for (int y = 0; y < 10; y++) {
-//            printf("[%c%d] ", poltronasDisponiveis[i], y + 1);
-//        }
-//        printf("\n");
-//    }
-//    printf("\n");
-//}
-//
-//void clearScreen(){
-//#ifdef _WIN32
-//    system("cls");
-//#else
-//    system("clear");
-//#endif
-//}
-//
-////
-////char poltronasDisponiveis[] = "ABCDEFGHIJ";
-////char poltronasSelecionadas[100][5];
-////
-////int verificarSeJaEstaSelecinada(char *poltrona){
-////    int tamanhoArrayPoltrona = strlen(poltronasDisponiveis);
-////    for (int i = 0; i < tamanhoArrayPoltrona; i++) {
-////        if (poltrona == poltronasDisponiveis[i]){
-////            return 1;
-////        }
-////    }
-////    return 0;
-////}
-////
-////void mostrarPoltronasESelecionar(){
-////    int tamanhoArrayPoltrona = strlen(poltronasDisponiveis);
-////    for (int i = 0; i < tamanhoArrayPoltrona; i++) {
-////        printf("\n");
-////        for (int y = 0; y < 10; y++) {
-////            printf("[%c%d] ", poltronasDisponiveis[i], y + 1);
-////        }
-////        printf("\n");
-////    }
-//////    char poltrona[2];
-//////    selecionarPoltrona(poltrona);
-//////    strcpy(poltronasSelecionadas[0], poltrona);
-////}
-////
-////void selecionarPoltrona(char *poltrona){
-////
-////}
-////
-////void selecionarPoltrona(char *poltrona) {
-////    printf("Digite o nome da poltrona:\n");
-////    scanf("%s", poltrona);
-////}
-////
-////int main() {
-////
-////
-////
-//////    mostrarPoltronasESelecionar();
-//////
-//////    char confirmacao = 'N';
-//////    printf("Confirmar poltrona \"%s\"?", poltrona);
-//////    do{
-//////
-//////    }while (poltrona != '\0' && poltrona[0] != '\0');
-////
-////    return 0;
-////}
-////
-*/
+float calcularValorDesconto(float valorEspetaculo, float valorDesconto) {
+    float desconto = (valorDesconto / 100) * (valorEspetaculo);
+    return valorEspetaculo - desconto;
+}
